@@ -1,0 +1,23 @@
+{
+  "name": "my-dev-env-restorer",
+  "version": "1.0.0",
+  "description": "Windows has blown up on me so often that I'm creating this project which lists out all the tools and configs that I need for an enjoyable dev experience. Perhaps someone else will find it useful too :)",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/taeuscherpferd/my-dev-env-restorer.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/taeuscherpferd/my-dev-env-restorer/issues"
+  },
+  "homepage": "https://github.com/taeuscherpferd/my-dev-env-restorer#readme",
+  "dependencies": {
+    "opn": "^6.0.0"
+  }
+}
