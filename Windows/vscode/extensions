@@ -1,0 +1,23 @@
+Paste these into a powershell terminal
+------------------------------------------------------------------------------------------------------------------------
+code --install-extension aeschli.vscode-css-formatter
+code --install-extension asvetliakov.vscode-neovim
+code --install-extension dbaeumer.vscode-eslint
+code --install-extension jonsmithers.open-in-vim
+code --install-extension kaileanokeefe.create-react-component
+code --install-extension Leopotam.csharpfixformat
+code --install-extension ms-dotnettools.csharp
+code --install-extension ms-python.python
+code --install-extension ms-vscode-remote.remote-wsl
+code --install-extension ms-vsliveshare.vsliveshare
+code --install-extension msjsdiag.debugger-for-chrome
+code --install-extension PKief.material-icon-theme
+code --install-extension royaction.color-manager
+code --install-extension ryu1kn.partial-diff
+code --install-extension sibiraj-s.vscode-scss-formatter
+code --install-extension slevesque.vscode-autohotkey
+code --install-extension streetsidesoftware.code-spell-checker
+code --install-extension Unity.unity-debug
+code --install-extension vscodevim.vim
+code --install-extension wayou.vscode-todo-highlight
+code --install-extension wilsonsio.color-vision
