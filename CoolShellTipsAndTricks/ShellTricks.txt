@@ -1,0 +1,8 @@
+GIT
+-------------------- -------------------- --------------------
+  * git branch -d `git branch --list '*-*'` 
+    - The command above will mass delete local branches in git according to the provided search pattern.
+      Useful if you haven't cleaned up in a while. 
+
+SSH
+-------------------- -------------------- --------------------
