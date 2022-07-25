@@ -1,4 +1,4 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+﻿ #NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -91,19 +91,19 @@ Return
 
 ; OVERRIDE THE STUPID TEAMS SHORTCUT!!!
 #IfWinActive, ahk_class Chrome_WidgetWin_1 ahk_exe Teams.exe
-$^+c::TrayTip "😁", "Saved your life! ;)", 5
+$^+c::TrayTip "ðŸ˜", "Saved your life! ;)", 5
 Return
 
 ; COPY IMAGE AS TEXT (WIN + I)
 #i::
-Run,C:\Users\kailean.okeefe\prog\python\oc_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\oc_copy\oc_copy.py
+Run, C:\Users\kailean.okeefe\prog\python\oc_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\oc_copy\oc_copy.py
 Return 
 
 ;AUTO SETUP FOR WORK CTRL + ALT + W
 ^!w::
-Run,C:\Users\kailean.okeefe\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe" --process-start-args "--profile=AAD -disable-features=HardwareMediaKeyHandling" (0.03)
-Run,C:\Users\kailean.okeefe\AppData\Local\Programs\Microsoft VS Code\Code.exe (0.03)
-Run,C:\Program Files\iTunes\iTunes.exe
-Run,D:\winstoreLinks\Windows Terminal (preview) (0.08)
-Run,C:\Program Files\Mozilla Firefox\firefox.exe -url "https://dev.azure.com/hexagonsf/platform/_git/Nimbus?path=%2F&version=GBmaster&_a=contents" -url "https://hexagonmi.atlassian.net/jira/so
-Return (8.03)
+Run, C:\Users\kailean.okeefe\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe" --process-start-args "--profile=AAD -disable-features=HardwareMediaKeyHandling"
+Run, C:\Users\kailean.okeefe\AppData\Local\Programs\Microsoft VS Code\Code.exe 
+Run, C:\Program Files\iTunes\iTunes.exe
+Run, D:\winstoreLinks\Windows Terminal (preview) 
+Run, C:\Program Files\Mozilla Firefox\firefox.exe -url "https://dev.azure.com/hexagonsf/platform/_git/Nimbus?path=`%2F&version=GBmaster&_a=contents" -url "https://hexagonmi.atlassian.net/jira/software/c/projects/GEN/boards/1605?quickFilter=22255" - url "https://metrologyreporting.dev.hexagonsfx.com/home?daterange=all";
+Return 
