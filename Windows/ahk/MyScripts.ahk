@@ -1,4 +1,4 @@
-﻿#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
+#NoEnv  ; Recommended for performance and compatibility with future AutoHotkey releases.
 ; #Warn  ; Enable warnings to assist with detecting common errors.
 SendMode Input  ; Recommended for new scripts due to its superior speed and reliability.
 SetWorkingDir %A_ScriptDir%  ; Ensures a consistent starting directory.
@@ -74,30 +74,25 @@ LWin & RButton::
 Send, {LWin down}{LCtrl down}{Right}{LWin up}{LCtrl up}
 return
 
-; KEEP WINDOW ON TOP OF OTHER WINDOWS (LOST IN THE CALAMITY)
+;COPY IMAGE AS TEXT (WIN + I)
+#i::
+Run, C:\Users\kailean.okeefe\prog\python\oc_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\oc_copy\oc_copy.py
+Return 
 
-; CHECK IF CURRENT SONG IN ITUNES IS CLEAN 
+;KEEP WINDOW ON TOP OF OTHER WINDOWS (LOST IN THE CALAMITY)
+
+;CHECK IF CURRENT SONG IN ITUNES IS CLEAN 
 #c::
 Run, PowerShell.exe -ExecutionPolicy Bypass -WindowStyle Hidden -Command C:\Users\kailean.okeefe\prog\powershell\GetArtistAndTitle.ps1
 Return
 
-; CROSS COPY PASTE TO DENNIS (CTRL + ALT + c / v)
+;CROSS COPY PASTE TO DENNIS (CTRL + ALT + c / v)
 ^!c::
 Run, C:\Users\kailean.okeefe\prog\python\net_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\net_copy\net_copy.py copy
 Return
 ^!v::
 Run, C:\Users\kailean.okeefe\prog\python\net_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\net_copy\net_copy.py paste
 Return
-
-; OVERRIDE THE STUPID TEAMS SHORTCUT!!!
-#IfWinActive, ahk_class Chrome_WidgetWin_1 ahk_exe Teams.exe
-$^+c::TrayTip "😁", "Saved your life! ;)", 5
-Return
-
-; COPY IMAGE AS TEXT (WIN + I)
-#i::
-Run, C:\Users\kailean.okeefe\prog\python\oc_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\oc_copy\oc_copy.py
-Return 
 
 ;AUTO SETUP FOR WORK CTRL + ALT + W
 ^!w::
@@ -106,4 +101,9 @@ Run, C:\Users\kailean.okeefe\AppData\Local\Programs\Microsoft VS Code\Code.exe
 Run, C:\Program Files\iTunes\iTunes.exe
 Run, D:\winstoreLinks\Windows Terminal (preview) 
 Run, C:\Program Files\Mozilla Firefox\firefox.exe -url "https://dev.azure.com/hexagonsf/platform/_git/Nimbus?path=`%2F&version=GBmaster&_a=contents" -url "https://hexagonmi.atlassian.net/jira/software/c/projects/GEN/boards/1605?quickFilter=22255" - url "https://metrologyreporting.dev.hexagonsfx.com/home?daterange=all";
+Return
+
+;OVERRIDE THE STUPID TEAMS SHORTCUT
+#IfWinActive, ahk_class Chrome_WidgetWin_1 ahk_exe Teams.exe
+$^+c::TrayTip "😁", "Saved your life! ;)", 5
 Return
