@@ -6,3 +6,12 @@ GIT
 
 SSH
 -------------------- -------------------- --------------------
+  * ssh -L LOCAL_PORT_TO_BIND:localhost:REMOTE_VNC_PORT USERNAME@ADDRESS -p SSH_PORT
+    - Using SSH like this allows you to bind ports from the remote machine to the local machine.
+
+CURL
+-------------------- -------------------- --------------------
+  * curl -u 'username:password' -T <FileToSend> <ServerAddressAndPath> --anyauth
+    - This command will push a file to a webdav server. Usefull for sending to ios devices that have
+      Textastic installed
+
