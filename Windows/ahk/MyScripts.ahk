@@ -39,18 +39,18 @@ Return
 ^!F12:: send, {NumLock}
 Return
 
-;COPY AND PASTE FROM ONE APP TO ANOTHER! COMMAND + C
-#c:: 
-Send, {CTRLDOWN}c{CTRLUP}
-sleep, 300
-Send, {ALTDOWN}{TAB}{ALTUP}
-sleep, 300
-Send, {CTRLDOWN}v{CTRLUP}
-sleep, 300
-Send, {Enter}
-sleep, 300
-Send, {ALTDOWN}{TAB}{ALTUP}
-return
+;COPY AND PASTE FROM ONE APP TO ANOTHER! COMMAND + C (Commented out in favor for checking if songs are clean)
+;#c:: 
+;Send, {CTRLDOWN}c{CTRLUP}
+;sleep, 300
+;Send, {ALTDOWN}{TAB}{ALTUP}
+;sleep, 300
+;Send, {CTRLDOWN}v{CTRLUP}
+;sleep, 300
+;Send, {Enter}
+;sleep, 300
+;Send, {ALTDOWN}{TAB}{ALTUP}
+;return
 
 ;QUIZLET CODE COMMAND + Q
 #q:: 
@@ -74,31 +74,36 @@ LWin & RButton::
 Send, {LWin down}{LCtrl down}{Right}{LWin up}{LCtrl up}
 return
 
+; KEEP WINDOW ON TOP OF OTHER WINDOWS (LOST IN THE CALAMITY)
+
+; CHECK IF CURRENT SONG IN ITUNES IS CLEAN 
+#c::
+Run, C:\Users\kailean.okeefe\prog\powershell\GetArtistAndTitle.ps1
+Return
+
+; CROSS COPY PASTE TO DENNIS (CTRL + ALT + c / v)
+^!c::
+Run, C:\Users\kailean.okeefe\prog\python\net_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\net_copy\net_copy.py copy
+Return
+^!v::
+Run, C:\Users\kailean.okeefe\prog\python\net_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\net_copy\net_copy.py paste
+Return
+
+; OVERRIDE THE STUPID TEAMS SHORTCUT!!!
+#IfWinActive, ahk_class Chrome_WidgetWin_1 ahk_exe Teams.exe
+$^+c::TrayTip "😁", "Saved your life! ;)", 5
+Return
+
+; COPY IMAGE AS TEXT (WIN + I)
+#i::
+Run,C:\Users\kailean.okeefe\prog\python\oc_copy\scripts\pythonw.exe C:\Users\kailean.okeefe\prog\python\oc_copy\oc_copy.py
+Return 
 
 ;AUTO SETUP FOR WORK CTRL + ALT + W
 ^!w::
-;The commented out code is for if I want to login with having to type credentials
-;Loginname = Your Name
-;Password = Your Password
-Run,C:\Users\kailean.okeefe\AppData\Local\SourceTree\SourceTree.exe
-Run,D:\Programs\Fortinet\FortiClient.exe
-Run,C:\Program Files (x86)\Microsoft\Skype for Desktop\Skype.exe
-Run,C:\Users\kailean.okeefe\AppData\Local\Microsoft\Teams
-
-RunAs[,kailean.okeefe, TRLvrm7966]
-Run,C:\Program Files (x86)\Microsoft Visual Studio\2019\Professional\Common7\IDE\devenv.exe 
-RunAs
-
-URL = https://secure.saashr.com/ta/6123079.admin?rnd=XFP&showAdmin=1&Ext=login&sft=ARJLLOVBJV
-WB := ComObjCreate("InternetExplorer.Application")
-WB.Visible := True
-WB.Navigate(URL)
-While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy ; wait for the page to load
-   Sleep, 10
-;wb.document.getElementById("ctl00_mainContentPlaceHolder_loginUserControl_userLoginTextBox").value := Loginname
-;wb.document.getElementById("ctl00_mainContentPlaceHolder_loginUserControl_passwordTextBox").value := Password
-;wb.document.getElementById("ctl00_mainContentPlaceHolder_loginUserControl_submitButton").click()
-;While wb.readyState != 4 || wb.document.readyState != "complete" || wb.busy ; wait for the page to load
-;   Sleep, 10
-;Msgbox, Now logged in and loaded!
-return
+Run,C:\Users\kailean.okeefe\AppData\Local\Microsoft\Teams\Update.exe --processStart "Teams.exe" --process-start-args "--profile=AAD -disable-features=HardwareMediaKeyHandling" (0.03)
+Run,C:\Users\kailean.okeefe\AppData\Local\Programs\Microsoft VS Code\Code.exe (0.03)
+Run,C:\Program Files\iTunes\iTunes.exe
+Run,D:\winstoreLinks\Windows Terminal (preview) (0.08)
+Run,C:\Program Files\Mozilla Firefox\firefox.exe -url "https://dev.azure.com/hexagonsf/platform/_git/Nimbus?path=%2F&version=GBmaster&_a=contents" -url "https://hexagonmi.atlassian.net/jira/so
+Return (8.03)
