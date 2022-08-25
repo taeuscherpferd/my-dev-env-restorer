@@ -21,9 +21,9 @@ def paste_clipboard(s):
 
 if copy_or_paste == "copy":
     json_s = {"text": copy_clipboard()}
-    resp = requests.post("http://192.168.1.50:22555/copy", json=json_s)
+    resp = requests.post("http://192.168.1.15:22555/copy", json=json_s)
     
 else:
-    resp = requests.get("http://192.168.1.50:22555")
+    resp = requests.get("http://192.168.1.15:22555")
     paste_clipboard(resp.text)
 
