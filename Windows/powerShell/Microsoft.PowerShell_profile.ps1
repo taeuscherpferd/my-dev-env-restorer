@@ -16,13 +16,17 @@ function nav-to-work-projects {
 
 function npm-clean {
   rm -r .\node_modules\, .\package-lock.json;
-  npm i;
-  npm audit fix;
+  npm i --legacy-peer-deps;
+  npm audit fix --legacy-peer-deps;
   npm start;
 }
 
 function mm {
   git pull --rebase;
+}
+
+function beep {
+  [console]::beep(500,300)
 }
 
 function npmi($a) {
