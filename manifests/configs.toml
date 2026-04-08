@@ -53,3 +53,9 @@ id = "autohotkey-main"
 description = "Main AutoHotkey automation script"
 overlays = { windows = "configs/windows/autohotkey/MyScripts.ahk" }
 targets = { windows = "%USERPROFILE%\\Documents\\AutoHotkey\\MyScripts.ahk" }
+
+[[config]]
+id = "Agentsmd"
+description = "Agents.md file containing instructions for LLM agents"
+shared = "configs/shared/AI/Agents.md"
+targets = { windows = "%USERPROFILE%\\.codex\\Agents.md" }

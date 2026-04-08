@@ -4,6 +4,7 @@ Instructions for coding in general, as well as for working on specific project t
 ## Coding
 - Do not add more comments then necessary. In all cases be descriptive with your naming to self document the code that way. Only include comments when something is especially confusing, or unclear
 - If the project you are working on has a testing suite, always make sure to run your code against it to make sure that things are working correctly
+- Avoid duplicating code like the plague. If you find code being duplicated more than even once, refactor that code so that it is only in one place and can be reused. This is especially important for business logic and jsx code. Even simple things like filtering an array should be considered for refactoring if they are being duplicated more than once.
 
 ## Project types
 
