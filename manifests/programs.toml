@@ -1,0 +1,120 @@
+[[program]]
+name = "Visual Studio Code"
+url = "https://code.visualstudio.com/download"
+platforms = ["all"]
+
+[[program]]
+name = "Blender"
+url = "https://www.blender.org/download"
+platforms = ["all"]
+
+[[program]]
+name = "Neovim"
+url = "https://neovim.io/doc/install/"
+platforms = ["all"]
+
+[[program]]
+name = "Firefox"
+url = "https://www.mozilla.org/firefox/new/"
+platforms = ["all"]
+
+[[program]]
+name = "Meld"
+url = "https://meldmerge.org/"
+platforms = ["all"]
+
+[[program]]
+name = "Obsidian"
+url = "https://obsidian.md/download"
+platforms = ["all"]
+
+[[program]]
+name = "Anki"
+url = "https://apps.ankiweb.net/#downloads"
+platforms = ["all"]
+
+[[program]]
+name = "Ollama"
+url = "https://ollama.com/download"
+platforms = ["all"]
+
+[[program]]
+name = "Sunshine"
+url = "https://github.com/LizardByte/Sunshine/releases"
+platforms = ["all"]
+
+[[program]]
+name = "Steam"
+url = "https://store.steampowered.com/about/"
+platforms = ["all"]
+
+[[program]]
+name = "WireGuard"
+url = "https://www.wireguard.com/install/"
+platforms = ["all"]
+
+[[program]]
+name = "Discord"
+url = "https://discord.com/download"
+platforms = ["all"]
+
+[[program]]
+name = "Apple Music"
+url = "https://apps.microsoft.com/detail/9PFHDD62MXS1"
+platforms = ["windows"]
+
+[[program]]
+name = "AutoHotkey"
+url = "https://www.autohotkey.com/download/"
+platforms = ["windows"]
+
+[[program]]
+name = "Microsoft Edge"
+url = "https://www.microsoft.com/edge/download"
+platforms = ["windows"]
+
+[[program]]
+name = "OBS Studio"
+url = "https://obsproject.com/download"
+platforms = ["windows"]
+
+[[program]]
+name = "Pororoca"
+url = "https://pororoca.io/intro/download"
+platforms = ["windows"]
+
+[[program]]
+name = "TightVNC"
+url = "https://www.tightvnc.com/download.php"
+platforms = ["windows"]
+
+[[program]]
+name = "Visual Studio"
+url = "https://visualstudio.microsoft.com/downloads/"
+platforms = ["windows"]
+
+[[program]]
+name = "Microsoft Teams"
+url = "https://www.microsoft.com/microsoft-teams/download-app"
+platforms = ["windows"]
+
+[[program]]
+name = "Windows Terminal"
+url = "https://apps.microsoft.com/detail/9N0DX20HK701"
+platforms = ["windows"]
+
+[[program]]
+name = "Paste Into File"
+url = "https://github.com/eltos/PasteIntoFile/releases"
+platforms = ["windows"]
+
+[[program]]
+name = "PowerToys"
+url = "https://github.com/microsoft/PowerToys/releases"
+platforms = ["windows"]
+
+[[program]]
+name = "Rust"
+url = "https://www.rust-lang.org/tools/install"
+platforms = ["all"]
+notes = "Useful if a fresh machine does not already have cargo installed."

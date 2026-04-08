@@ -1,0 +1,3 @@
+# Android-specific zsh tweaks appended after the shared base config.
+alias p="termux-open"
+alias td="nvim ~/todo.md"

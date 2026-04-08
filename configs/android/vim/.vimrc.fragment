@@ -1,0 +1,3 @@
+" Android-specific Vim tweaks appended after the shared base config.
+set shell=sh
+nnoremap <F10> :echo 'IDEMode disabled on Android'<CR>

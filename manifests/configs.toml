@@ -1,0 +1,55 @@
+[[config]]
+id = "vimrc"
+description = "Classic Vim configuration"
+shared = "configs/shared/vim/.vimrc"
+platform_fragments = { android = ["configs/android/vim/.vimrc.fragment"] }
+targets = { windows = "%USERPROFILE%\\_vimrc", linux = "~/.vimrc", macos = "~/.vimrc", android = "~/.vimrc" }
+
+[[config]]
+id = "nvim-init"
+description = "Neovim entrypoint that reuses the shared Vim config"
+shared = "configs/shared/nvim/init.vim"
+targets = { windows = "%LOCALAPPDATA%\\nvim\\init.vim", linux = "~/.config/nvim/init.vim", macos = "~/.config/nvim/init.vim", android = "~/.config/nvim/init.vim" }
+
+[[config]]
+id = "nvim-colors-molokai"
+description = "Neovim colorscheme dependency for init.vim"
+shared = "configs/shared/nvim/colors/molokai.vim"
+targets = { windows = "%LOCALAPPDATA%\\nvim\\colors\\molokai.vim", linux = "~/.config/nvim/colors/molokai.vim", macos = "~/.config/nvim/colors/molokai.vim", android = "~/.config/nvim/colors/molokai.vim" }
+
+[[config]]
+id = "vim-plugin-copymatches"
+description = "Helper plugin used by the shared Vim setup"
+shared = "configs/shared/vim/plugin/copymatches.vim"
+targets = { windows = "%USERPROFILE%\\vimfiles\\plugin\\copymatches.vim", linux = "~/.vim/plugin/copymatches.vim", macos = "~/.vim/plugin/copymatches.vim", android = "~/.vim/plugin/copymatches.vim" }
+
+[[config]]
+id = "zshrc"
+description = "Shared zsh profile for unix-like environments"
+shared = "configs/shared/zsh/.zshrc"
+platform_fragments = { android = ["configs/android/zsh/.zshrc.fragment"] }
+targets = { linux = "~/.zshrc", macos = "~/.zshrc", android = "~/.zshrc" }
+
+[[config]]
+id = "tmux"
+description = "Shared tmux configuration"
+shared = "configs/shared/tmux/.tmux.conf"
+targets = { linux = "~/.tmux.conf", macos = "~/.tmux.conf", android = "~/.tmux.conf" }
+
+[[config]]
+id = "powershell-profile-core"
+description = "PowerShell 7+ profile"
+overlays = { windows = "configs/windows/powershell/Microsoft.PowerShell_profile.ps1" }
+targets = { windows = "%USERPROFILE%\\Documents\\PowerShell\\Microsoft.PowerShell_profile.ps1" }
+
+[[config]]
+id = "powershell-profile-windows"
+description = "Windows PowerShell 5 profile"
+overlays = { windows = "configs/windows/powershell/Microsoft.PowerShell_profile.ps1" }
+targets = { windows = "%USERPROFILE%\\Documents\\WindowsPowerShell\\Microsoft.PowerShell_profile.ps1" }
+
+[[config]]
+id = "autohotkey-main"
+description = "Main AutoHotkey automation script"
+overlays = { windows = "configs/windows/autohotkey/MyScripts.ahk" }
+targets = { windows = "%USERPROFILE%\\Documents\\AutoHotkey\\MyScripts.ahk" }
