@@ -1,3 +1,4 @@
+use std::collections::BTreeSet;
 use std::fs;
 use std::path::Path;
 use std::process::Command;
@@ -6,25 +7,39 @@ use anyhow::{Context, Result, anyhow};
 
 use crate::cli::Cli;
 use crate::manifest::{
-    ConfigEntry, Platform, ProgramEntry, load_config_manifest, load_program_manifest,
+    ConfigEntry, ConfigTarget, Platform, ProgramEntry, load_config_manifest, load_program_manifest,
 };
 use crate::repo::{discover_repo_root, expand_target_path};
 
 pub fn run(cli: Cli) -> Result<()> {
     let current_dir = std::env::current_dir().context("Failed to read the current directory")?;
     let repo_root = discover_repo_root(&current_dir)?;
-    let platform = Platform::current();
+    let host_platform = Platform::current();
 
     if cli.configs {
-        sync_configs(&repo_root, platform, SyncDirection::Apply, cli.dry_run)?;
+        sync_configs(
+            &repo_root,
+            host_platform,
+            &cli.targets,
+            cli.all_targets,
+            SyncDirection::Apply,
+            cli.dry_run,
+        )?;
     }
 
     if cli.pull {
-        sync_configs(&repo_root, platform, SyncDirection::Pull, cli.dry_run)?;
+        sync_configs(
+            &repo_root,
+            host_platform,
+            &cli.targets,
+            cli.all_targets,
+            SyncDirection::Pull,
+            cli.dry_run,
+        )?;
     }
 
     if cli.links {
-        open_program_links(&repo_root, platform, cli.dry_run)?;
+        open_program_links(&repo_root, host_platform, cli.dry_run)?;
     }
 
     Ok(())
@@ -38,7 +53,9 @@ enum SyncDirection {
 
 fn sync_configs(
     repo_root: &Path,
-    platform: Platform,
+    host_platform: Platform,
+    selected_targets: &[String],
+    all_targets: bool,
     direction: SyncDirection,
     dry_run: bool,
 ) -> Result<()> {
@@ -47,53 +64,87 @@ fn sync_configs(
 
     let mut changed = 0usize;
     let mut skipped = 0usize;
+    let mut matched_target_names = BTreeSet::new();
 
     for entry in &manifest.config {
-        let Some(target_raw) = entry.target_for_platform(platform) else {
+        let targets = entry.selectable_targets(host_platform, selected_targets, all_targets);
+
+        if targets.is_empty() {
             skipped += 1;
             continue;
-        };
+        }
 
-        let machine_path = expand_target_path(target_raw)?;
+        for target in targets {
+            matched_target_names.insert(target.name.clone());
+            let machine_path = expand_target_path(&target.path)?;
 
-        match direction {
-            SyncDirection::Apply => {
-                let generated = build_repo_output(repo_root, entry, platform)?;
-                write_generated_file(&generated, &machine_path, entry, dry_run)?;
-                changed += 1;
+            match direction {
+                SyncDirection::Apply => {
+                    let generated = build_repo_output(repo_root, entry, target)?;
+                    write_generated_file(&generated, &machine_path, entry, target, dry_run)?;
+                    changed += 1;
+                }
+                SyncDirection::Pull => {
+                    if entry.is_generated_for_target(target) {
+                        println!(
+                            "skip {} [{}]: generated from shared base plus fragment overlays; pull is not automatic",
+                            entry.id, target.name
+                        );
+                        skipped += 1;
+                        continue;
+                    }
+
+                    let Some(target_platform) = target.platform_enum() else {
+                        return Err(anyhow!(
+                            "Config '{}' target '{}' uses an unsupported platform '{}'",
+                            entry.id,
+                            target.name,
+                            target.platform
+                        ));
+                    };
+
+                    let Some(source_relative) = entry.base_source_for_platform(target_platform)
+                    else {
+                        return Err(anyhow!(
+                            "Config '{}' has no source for target '{}' on platform {}",
+                            entry.id,
+                            target.name,
+                            target.platform
+                        ));
+                    };
+
+                    let repo_path = repo_root.join(source_relative);
+
+                    if !machine_path.exists() {
+                        println!(
+                            "skip {} [{}]: target does not exist at {}",
+                            entry.id,
+                            target.name,
+                            machine_path.display()
+                        );
+                        skipped += 1;
+                        continue;
+                    }
+
+                    copy_file(
+                        &machine_path,
+                        &repo_path,
+                        entry,
+                        target,
+                        "machine",
+                        "repo",
+                        dry_run,
+                    )?;
+                    changed += 1;
+                }
             }
-            SyncDirection::Pull => {
-                if entry.is_generated_for_platform(platform) {
-                    println!(
-                        "skip {}: generated from shared base plus fragment overlays; pull is not automatic",
-                        entry.id
-                    );
-                    skipped += 1;
-                    continue;
-                }
+        }
+    }
 
-                let Some(source_relative) = entry.base_source_for_platform(platform) else {
-                    return Err(anyhow!(
-                        "Config '{}' has no source for platform {}",
-                        entry.id,
-                        platform.as_key()
-                    ));
-                };
-
-                let repo_path = repo_root.join(source_relative);
-
-                if !machine_path.exists() {
-                    println!(
-                        "skip {}: target does not exist at {}",
-                        entry.id,
-                        machine_path.display()
-                    );
-                    skipped += 1;
-                    continue;
-                }
-
-                copy_file(&machine_path, &repo_path, entry, "machine", "repo", dry_run)?;
-                changed += 1;
+    if !selected_targets.is_empty() {
+        for requested_target in selected_targets {
+            if !matched_target_names.contains(requested_target) {
+                return Err(anyhow!("Unknown target '{}'.", requested_target));
             }
         }
     }
@@ -107,18 +158,32 @@ fn sync_configs(
     Ok(())
 }
 
-fn build_repo_output(repo_root: &Path, entry: &ConfigEntry, platform: Platform) -> Result<String> {
-    let Some(base_relative) = entry.base_source_for_platform(platform) else {
+fn build_repo_output(
+    repo_root: &Path,
+    entry: &ConfigEntry,
+    target: &ConfigTarget,
+) -> Result<String> {
+    let Some(target_platform) = target.platform_enum() else {
         return Err(anyhow!(
-            "Config '{}' has no source for platform {}",
+            "Config '{}' target '{}' uses an unsupported platform '{}'",
             entry.id,
-            platform.as_key()
+            target.name,
+            target.platform
+        ));
+    };
+
+    let Some(base_relative) = entry.base_source_for_platform(target_platform) else {
+        return Err(anyhow!(
+            "Config '{}' has no source for target '{}' on platform {}",
+            entry.id,
+            target.name,
+            target.platform
         ));
     };
 
     let mut output = read_repo_file(&repo_root.join(base_relative), entry, "base source")?;
 
-    for fragment_relative in entry.fragments_for_platform(platform) {
+    for fragment_relative in entry.fragments_for_target(target) {
         let fragment = read_repo_file(&repo_root.join(fragment_relative), entry, "fragment")?;
         append_fragment(&mut output, &fragment);
     }
@@ -154,6 +219,7 @@ fn write_generated_file(
     content: &str,
     destination: &Path,
     entry: &ConfigEntry,
+    target: &ConfigTarget,
     dry_run: bool,
 ) -> Result<()> {
     let description = entry
@@ -163,8 +229,9 @@ fn write_generated_file(
 
     if dry_run {
         println!(
-            "dry-run {}: generated output -> {} ({description})",
+            "dry-run {} [{}]: generated output -> {} ({description})",
             entry.id,
+            target.name,
             destination.display()
         );
         return Ok(());
@@ -172,8 +239,9 @@ fn write_generated_file(
 
     let parent = destination.parent().ok_or_else(|| {
         anyhow!(
-            "Config '{}' resolved to a target without a parent directory: {}",
+            "Config '{}' target '{}' resolved to a destination without a parent directory: {}",
             entry.id,
+            target.name,
             destination.display()
         )
     })?;
@@ -187,13 +255,19 @@ fn write_generated_file(
 
     fs::write(destination, content).with_context(|| {
         format!(
-            "Failed to write generated config '{}' to {}",
+            "Failed to write generated config '{}' target '{}' to {}",
             entry.id,
+            target.name,
             destination.display()
         )
     })?;
 
-    println!("generated {} -> {}", entry.id, destination.display());
+    println!(
+        "generated {} [{}] -> {}",
+        entry.id,
+        target.name,
+        destination.display()
+    );
     println!("synced to machine: {description}");
     Ok(())
 }
@@ -202,14 +276,16 @@ fn copy_file(
     source: &Path,
     destination: &Path,
     entry: &ConfigEntry,
+    target: &ConfigTarget,
     source_label: &str,
     destination_label: &str,
     dry_run: bool,
 ) -> Result<()> {
     if !source.exists() {
         return Err(anyhow!(
-            "Config '{}' expected a source file at {}",
+            "Config '{}' target '{}' expected a source file at {}",
             entry.id,
+            target.name,
             source.display()
         ));
     }
@@ -221,8 +297,9 @@ fn copy_file(
 
     if dry_run {
         println!(
-            "dry-run {}: {} -> {} ({description})",
+            "dry-run {} [{}]: {} -> {} ({description})",
             entry.id,
+            target.name,
             source.display(),
             destination.display()
         );
@@ -231,8 +308,9 @@ fn copy_file(
 
     let parent = destination.parent().ok_or_else(|| {
         anyhow!(
-            "Config '{}' resolved to a target without a parent directory: {}",
+            "Config '{}' target '{}' resolved to a destination without a parent directory: {}",
             entry.id,
+            target.name,
             destination.display()
         )
     })?;
@@ -246,17 +324,19 @@ fn copy_file(
 
     fs::copy(source, destination).with_context(|| {
         format!(
-            "Failed to copy config '{}' from {} to {}",
+            "Failed to copy config '{}' target '{}' from {} to {}",
             entry.id,
+            target.name,
             source.display(),
             destination.display()
         )
     })?;
 
     println!(
-        "{} {}: {} -> {}",
+        "{} {} [{}]: {} -> {}",
         source_label,
         entry.id,
+        target.name,
         source.display(),
         destination.display()
     );
@@ -313,7 +393,7 @@ fn open_in_browser(url: &str) -> Result<()> {
 
 #[cfg(test)]
 mod tests {
-    use crate::manifest::{ConfigEntry, Platform, ProgramEntry};
+    use crate::manifest::{ConfigEntry, ConfigTarget, Platform, ProgramEntry};
     use std::collections::BTreeMap;
 
     #[test]
@@ -328,7 +408,8 @@ mod tests {
             )]),
             fragments: Vec::new(),
             platform_fragments: BTreeMap::new(),
-            targets: BTreeMap::new(),
+            target_fragments: BTreeMap::new(),
+            targets: Vec::new(),
         };
 
         assert_eq!(
@@ -342,7 +423,7 @@ mod tests {
     }
 
     #[test]
-    fn merges_shared_and_platform_fragments() {
+    fn merges_shared_platform_and_target_fragments() {
         let entry = ConfigEntry {
             id: "zshrc".to_owned(),
             description: None,
@@ -350,23 +431,67 @@ mod tests {
             overlays: BTreeMap::new(),
             fragments: vec!["configs/shared/zsh/base.fragment".to_owned()],
             platform_fragments: BTreeMap::from([(
-                "android".to_owned(),
-                vec!["configs/android/zsh/.zshrc.fragment".to_owned()],
+                "linux".to_owned(),
+                vec!["configs/linux/zsh/linux.fragment".to_owned()],
             )]),
-            targets: BTreeMap::new(),
+            target_fragments: BTreeMap::from([(
+                "windows-wsl-main".to_owned(),
+                vec!["configs/wsl/zsh/target.fragment".to_owned()],
+            )]),
+            targets: Vec::new(),
+        };
+        let target = ConfigTarget {
+            name: "windows-wsl-main".to_owned(),
+            platform: "linux".to_owned(),
+            path: "/tmp/.zshrc".to_owned(),
+            default: false,
+            hosts: vec!["windows".to_owned()],
         };
 
         assert_eq!(
-            entry.fragments_for_platform(Platform::Linux),
-            vec!["configs/shared/zsh/base.fragment"]
-        );
-        assert_eq!(
-            entry.fragments_for_platform(Platform::Android),
+            entry.fragments_for_target(&target),
             vec![
                 "configs/shared/zsh/base.fragment",
-                "configs/android/zsh/.zshrc.fragment"
+                "configs/linux/zsh/linux.fragment",
+                "configs/wsl/zsh/target.fragment"
             ]
         );
+    }
+
+    #[test]
+    fn selects_default_targets_for_host_platform() {
+        let entry = ConfigEntry {
+            id: "vimrc".to_owned(),
+            description: None,
+            shared: Some("configs/shared/vim/.vimrc".to_owned()),
+            overlays: BTreeMap::new(),
+            fragments: Vec::new(),
+            platform_fragments: BTreeMap::new(),
+            target_fragments: BTreeMap::new(),
+            targets: vec![
+                ConfigTarget {
+                    name: "windows-host".to_owned(),
+                    platform: "windows".to_owned(),
+                    path: "a".to_owned(),
+                    default: true,
+                    hosts: Vec::new(),
+                },
+                ConfigTarget {
+                    name: "windows-wsl-main".to_owned(),
+                    platform: "linux".to_owned(),
+                    path: "b".to_owned(),
+                    default: false,
+                    hosts: vec!["windows".to_owned()],
+                },
+            ],
+        };
+
+        let selected = entry.selectable_targets(Platform::Windows, &[], false);
+        assert_eq!(selected.len(), 1);
+        assert_eq!(selected[0].name, "windows-host");
+
+        let all_selected = entry.selectable_targets(Platform::Windows, &[], true);
+        assert_eq!(all_selected.len(), 2);
     }
 
     #[test]

@@ -15,13 +15,25 @@ From the repository root:
 cargo run -- --configs
 ```
 
-Copies the repo-managed configs to their OS-specific destinations.
+Copies the repo-managed configs to the default targets for the current host.
 
 ```bash
 cargo run -- --pull
 ```
 
 Pulls local config changes back into the repo for plain copied files. Generated layered configs are skipped because reverse-merging a finished file back into shared plus fragments is not safe to do automatically.
+
+```bash
+cargo run -- --configs --target windows-wsl-main
+```
+
+Copies only the named target.
+
+```bash
+cargo run -- --configs --all-targets
+```
+
+Copies every target that can be managed from the current host. On Windows, that can include both the Windows host and optional WSL targets.
 
 ```bash
 cargo run -- --links
@@ -60,33 +72,68 @@ Each config entry can point to:
 - `overlays.<platform>`: a full-file override when a platform needs a completely different version
 - `fragments`: shared snippets appended after the base file
 - `platform_fragments.<platform>`: platform-only snippets appended after the base file
+- `target_fragments.<target>`: target-only snippets appended after the platform layer
 
 The CLI builds the final output in this order:
 
 1. `overlays.<platform>` if present, otherwise `shared`
 2. any `fragments`
 3. any `platform_fragments.<platform>`
+4. any `target_fragments.<target>`
 
-That gives you one main config file and small per-platform tweaks instead of duplicated whole files.
+That gives you one main config file and small per-platform or per-target tweaks instead of duplicated whole files.
+
+## Named targets
+
+Targets are now explicit objects with a name, content platform, destination path, and optional host restrictions.
+
+```toml
+[[config]]
+id = "vimrc"
+shared = "configs/shared/vim/.vimrc"
+targets = [
+  { name = "windows-host", platform = "windows", path = "%USERPROFILE%\\_vimrc" },
+  { name = "windows-wsl-main", platform = "linux", path = "\\\\wsl$\\%WSL_DISTRO_NAME%\\home\\%WSL_USERNAME%\\.vimrc", default = false, hosts = ["windows"] }
+]
+```
+
+In that example:
+
+- `platform = "windows"` means build the Windows-style output for the Windows host target.
+- `platform = "linux"` means build the Linux-style output for the WSL target.
+- `hosts = ["windows"]` means that target can be managed from a Windows machine.
+- `default = false` keeps that WSL target out of the normal `--configs` run unless you ask for it with `--target` or `--all-targets`.
+
+## WSL setup
+
+The sample manifest includes optional WSL targets named `windows-wsl-main` for Vim, Neovim, Zsh, and tmux. They use these environment variables when run from Windows:
+
+- `%WSL_DISTRO_NAME%`
+- `%WSL_USERNAME%`
+
+Example PowerShell session:
+
+```powershell
+$env:WSL_DISTRO_NAME = "Ubuntu"
+$env:WSL_USERNAME = "kailean"
+cargo run -- --configs --target windows-wsl-main
+```
+
+If you want the Windows host and WSL target together, run:
+
+```powershell
+$env:WSL_DISTRO_NAME = "Ubuntu"
+$env:WSL_USERNAME = "kailean"
+cargo run -- --configs --all-targets
+```
 
 ## Adding a new config
 
 1. Put the default file in `configs/shared/...`.
 2. Add a full overlay only if a platform truly needs a different whole file.
 3. Prefer small fragment files for minor differences such as aliases, hotkeys, shell paths, or platform-specific commands.
-4. Register the source files and targets in `manifests/configs.toml`.
-
-## Example
-
-```toml
-[[config]]
-id = "vimrc"
-shared = "configs/shared/vim/.vimrc"
-platform_fragments = { android = ["configs/android/vim/.vimrc.fragment"] }
-targets = { linux = "~/.vimrc", android = "~/.vimrc" }
-```
-
-With that setup, the Android target is generated from the shared `.vimrc` plus the Android fragment.
+4. Add one or more named targets in `manifests/configs.toml`.
+5. If needed, add `hosts` so one machine can manage another environment such as WSL.
 
 ## Adding a new program download page
 

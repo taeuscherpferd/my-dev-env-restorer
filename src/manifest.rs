@@ -53,7 +53,10 @@ pub struct ConfigEntry {
     pub fragments: Vec<String>,
     #[serde(default)]
     pub platform_fragments: BTreeMap<String, Vec<String>>,
-    pub targets: BTreeMap<String, String>,
+    #[serde(default)]
+    pub target_fragments: BTreeMap<String, Vec<String>>,
+    #[serde(default)]
+    pub targets: Vec<ConfigTarget>,
 }
 
 impl ConfigEntry {
@@ -64,27 +67,93 @@ impl ConfigEntry {
             .or(self.shared.as_deref())
     }
 
-    pub fn fragments_for_platform(&self, platform: Platform) -> Vec<&str> {
+    pub fn fragments_for_target(&self, target: &ConfigTarget) -> Vec<&str> {
         let mut fragments = self
             .fragments
             .iter()
             .map(String::as_str)
             .collect::<Vec<_>>();
 
-        if let Some(platform_fragments) = self.platform_fragments.get(platform.as_key()) {
+        if let Some(platform_fragments) = self.platform_fragments.get(target.platform.as_str()) {
             fragments.extend(platform_fragments.iter().map(String::as_str));
+        }
+
+        if let Some(target_fragments) = self.target_fragments.get(target.name.as_str()) {
+            fragments.extend(target_fragments.iter().map(String::as_str));
         }
 
         fragments
     }
 
-    pub fn is_generated_for_platform(&self, platform: Platform) -> bool {
-        !self.fragments_for_platform(platform).is_empty()
+    pub fn is_generated_for_target(&self, target: &ConfigTarget) -> bool {
+        !self.fragments_for_target(target).is_empty()
     }
 
-    pub fn target_for_platform(&self, platform: Platform) -> Option<&str> {
-        self.targets.get(platform.as_key()).map(String::as_str)
+    pub fn selectable_targets<'a>(
+        &'a self,
+        host_platform: Platform,
+        selected_targets: &[String],
+        all_targets: bool,
+    ) -> Vec<&'a ConfigTarget> {
+        if !selected_targets.is_empty() {
+            return self
+                .targets
+                .iter()
+                .filter(|target| selected_targets.iter().any(|name| name == &target.name))
+                .collect();
+        }
+
+        if all_targets {
+            return self
+                .targets
+                .iter()
+                .filter(|target| target.is_manageable_from(host_platform))
+                .collect();
+        }
+
+        self.targets
+            .iter()
+            .filter(|target| target.default && target.is_manageable_from(host_platform))
+            .collect()
     }
+}
+
+#[derive(Debug, Deserialize)]
+pub struct ConfigTarget {
+    pub name: String,
+    pub platform: String,
+    pub path: String,
+    #[serde(default = "default_true")]
+    pub default: bool,
+    #[serde(default)]
+    pub hosts: Vec<String>,
+}
+
+impl ConfigTarget {
+    pub fn is_manageable_from(&self, host_platform: Platform) -> bool {
+        if self.hosts.is_empty() {
+            return self.platform == host_platform.as_key();
+        }
+
+        self.hosts.iter().any(|host| {
+            let normalized = host.trim().to_ascii_lowercase();
+            normalized == "all" || normalized == host_platform.as_key()
+        })
+    }
+
+    pub fn platform_enum(&self) -> Option<Platform> {
+        match self.platform.as_str() {
+            "windows" => Some(Platform::Windows),
+            "linux" => Some(Platform::Linux),
+            "macos" => Some(Platform::Macos),
+            "android" => Some(Platform::Android),
+            _ => None,
+        }
+    }
+}
+
+fn default_true() -> bool {
+    true
 }
 
 #[derive(Debug, Deserialize)]

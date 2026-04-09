@@ -18,6 +18,10 @@ pub struct Cli {
         help = "Print planned work without changing files or opening links"
     )]
     pub dry_run: bool,
+    #[arg(long = "target", value_name = "NAME", help = "Sync only the named install target", action = clap::ArgAction::Append)]
+    pub targets: Vec<String>,
+    #[arg(long, help = "Sync every target that can be managed from this host")]
+    pub all_targets: bool,
 }
 
 impl Cli {
@@ -33,6 +37,12 @@ impl Cli {
         if cli.configs && cli.pull {
             return Err(anyhow!(
                 "--configs and --pull are opposites. Run them separately."
+            ));
+        }
+
+        if cli.all_targets && !cli.targets.is_empty() {
+            return Err(anyhow!(
+                "Use either --all-targets or one or more --target flags, not both."
             ));
         }
 
