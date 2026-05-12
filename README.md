@@ -27,7 +27,19 @@ Pulls local config changes back into the repo for plain copied files. Generated 
 cargo run -- --configs --target windows-wsl-main
 ```
 
-Copies only the named target.
+Copies only the named install target across managed configs.
+
+```bash
+cargo run -- --configs --config-id agents
+```
+
+Copies only the named config entry to the default target for the current host.
+
+```bash
+cargo run -- --configs --config-id agents --target macos-home
+```
+
+Copies only the named config entry to the named install target.
 
 ```bash
 cargo run -- --configs --all-targets
@@ -103,6 +115,15 @@ In that example:
 - `platform = "linux"` means build the Linux-style output for the WSL target.
 - `hosts = ["windows"]` means that target can be managed from a Windows machine.
 - `default = false` keeps that WSL target out of the normal `--configs` run unless you ask for it with `--target` or `--all-targets`.
+
+## Named configs
+
+Each config entry has an `id`, and `--config-id` limits `--configs` or `--pull` to one or more of those entries. It can be repeated and can also be combined with `--target`.
+
+```bash
+cargo run -- --configs --config-id agents
+cargo run -- --pull --config-id vimrc --config-id tmux
+```
 
 ## WSL setup
 

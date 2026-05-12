@@ -1,4 +1,14 @@
 [[config]]
+id = "agents"
+description = "Shared Codex instructions"
+shared = "configs/shared/AI/AGENTS.md"
+targets = [
+  { name = "windows-host", platform = "windows", path = "%USERPROFILE%\\.codex\\AGENTS.md" },
+  { name = "linux-home", platform = "linux", path = "~/.codex/AGENTS.md" },
+  { name = "macos-home", platform = "macos", path = "~/.codex/AGENTS.md" }
+]
+
+[[config]]
 id = "vimrc"
 description = "Classic Vim configuration"
 shared = "configs/shared/vim/.vimrc"

@@ -20,6 +20,7 @@ pub fn run(cli: Cli) -> Result<()> {
         sync_configs(
             &repo_root,
             host_platform,
+            &cli.config_ids,
             &cli.targets,
             cli.all_targets,
             SyncDirection::Apply,
@@ -31,6 +32,7 @@ pub fn run(cli: Cli) -> Result<()> {
         sync_configs(
             &repo_root,
             host_platform,
+            &cli.config_ids,
             &cli.targets,
             cli.all_targets,
             SyncDirection::Pull,
@@ -54,6 +56,7 @@ enum SyncDirection {
 fn sync_configs(
     repo_root: &Path,
     host_platform: Platform,
+    selected_config_ids: &[String],
     selected_targets: &[String],
     all_targets: bool,
     direction: SyncDirection,
@@ -61,12 +64,21 @@ fn sync_configs(
 ) -> Result<()> {
     let manifest_path = repo_root.join("manifests").join("configs.toml");
     let manifest = load_config_manifest(&manifest_path)?;
+    validate_selected_config_ids(&manifest.config, selected_config_ids)?;
 
     let mut changed = 0usize;
     let mut skipped = 0usize;
     let mut matched_target_names = BTreeSet::new();
 
     for entry in &manifest.config {
+        if !selected_config_ids.is_empty()
+            && !selected_config_ids
+                .iter()
+                .any(|config_id| config_id == &entry.id)
+        {
+            continue;
+        }
+
         let targets = entry.selectable_targets(host_platform, selected_targets, all_targets);
 
         if targets.is_empty() {
@@ -155,6 +167,28 @@ fn sync_configs(
     };
 
     println!("Config sync complete: {changed} {action}, {skipped} skipped.");
+    Ok(())
+}
+
+fn validate_selected_config_ids(
+    entries: &[ConfigEntry],
+    selected_config_ids: &[String],
+) -> Result<()> {
+    if selected_config_ids.is_empty() {
+        return Ok(());
+    }
+
+    let known_config_ids = entries
+        .iter()
+        .map(|entry| entry.id.as_str())
+        .collect::<BTreeSet<_>>();
+
+    for requested_config_id in selected_config_ids {
+        if !known_config_ids.contains(requested_config_id.as_str()) {
+            return Err(anyhow!("Unknown config id '{}'.", requested_config_id));
+        }
+    }
+
     Ok(())
 }
 
@@ -507,5 +541,42 @@ mod tests {
         assert!(entry.matches_platform(Platform::Linux));
         assert!(entry.matches_platform(Platform::Macos));
         assert!(entry.matches_platform(Platform::Android));
+    }
+
+    #[test]
+    fn accepts_known_selected_config_ids() {
+        let entries = vec![ConfigEntry {
+            id: "agents".to_owned(),
+            description: None,
+            shared: Some("configs/shared/AI/AGENTS.md".to_owned()),
+            overlays: BTreeMap::new(),
+            fragments: Vec::new(),
+            platform_fragments: BTreeMap::new(),
+            target_fragments: BTreeMap::new(),
+            targets: Vec::new(),
+        }];
+        let selected_config_ids = vec!["agents".to_owned()];
+
+        super::validate_selected_config_ids(&entries, &selected_config_ids)
+            .expect("known config ids should be accepted");
+    }
+
+    #[test]
+    fn rejects_unknown_selected_config_ids() {
+        let entries = vec![ConfigEntry {
+            id: "agents".to_owned(),
+            description: None,
+            shared: Some("configs/shared/AI/AGENTS.md".to_owned()),
+            overlays: BTreeMap::new(),
+            fragments: Vec::new(),
+            platform_fragments: BTreeMap::new(),
+            target_fragments: BTreeMap::new(),
+            targets: Vec::new(),
+        }];
+        let selected_config_ids = vec!["agnets".to_owned()];
+
+        let result = super::validate_selected_config_ids(&entries, &selected_config_ids);
+
+        assert!(result.is_err());
     }
 }

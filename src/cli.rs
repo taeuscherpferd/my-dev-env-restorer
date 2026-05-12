@@ -18,6 +18,13 @@ pub struct Cli {
         help = "Print planned work without changing files or opening links"
     )]
     pub dry_run: bool,
+    #[arg(
+        long = "config-id",
+        value_name = "ID",
+        help = "Sync only the named config entry",
+        action = clap::ArgAction::Append
+    )]
+    pub config_ids: Vec<String>,
     #[arg(long = "target", value_name = "NAME", help = "Sync only the named install target", action = clap::ArgAction::Append)]
     pub targets: Vec<String>,
     #[arg(long, help = "Sync every target that can be managed from this host")]
